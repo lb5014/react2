@@ -1,10 +1,5 @@
 // app/layout.tsx
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "My Next.js App",
-  description: "Generated with Next.js",
-};
+import React from "react";
 
 export default function RootLayout({
   children,
@@ -13,6 +8,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <title>My Next.js App</title>
+        <meta name="description" content="Generated with Next.js" />
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -1,8 +1,11 @@
 // app/page.tsx
-export default function HomePage() {
+import React from "react";
+
+export default function Page() {
   return (
-    <main>
-      <h1>Hello Next.js</h1>
-    </main>
+    <div style={{ padding: "2rem", textAlign: "center" }}>
+      <h1>My Next.js App</h1>
+      <p>Generated with Next.js</p>
+    </div>
   );
 }
