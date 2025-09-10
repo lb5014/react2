@@ -1,21 +1,382 @@
 # 9월 10일 강의내용
 ### 1교시  
+## 2장  
+1. Project structure and organization
+* 프로젝트의 구조 및 구성
+  * 이번 장에서는 Next.js 프로젝트의 폴더 및 파일 규칙에 대한 개요와 프로젝트를 구성하는 권장 사항에 관하여 설명합니다.
+# 용어 정의
+* 이 장부터 이후에 사용될 몇가지 용어에 대한 설명입니다.
+* 원문에는 route라는 단어가 자주 등장하고, 사전적 의미로는 "경로"입니다.
+* route(라우트)는 경로"를 의미하고, routing(라우팅)은 경로를 찾아가는 과정"을 의미합니다.
+* 그런데 path도 "경로"로 번역하기 때문에의 구별을 위해 대부분 routing(라우팅)으로 번역했습니 다.
+* directory와 folder는 특별한 구분 없이 나옵니다.
+* 최상위 폴더의 경우 directory로 하위 폴더는 folder로 쓰는 경우가 많지만 꼭 그렇지는 않습니다.
+* directory와 folder는 OS에 따라 구분되는 용어이기 때문에 같은 의미로 이해하면 됩니다.
+segment는 routing과 관련이 있는 directory의 별칭 정도로 이해하면 됩니다.
+# 📂 Next.js 프로젝트 구조 및 구성
 
+## 개요
+Next.js는 **파일 시스템 기반 라우팅(File-based Routing)**을 사용하기 때문에 폴더와 파일 구조가 곧 애플리케이션의 동작과 직결됩니다.  
+이번 문서에서는 Next.js 프로젝트에서 자주 사용되는 폴더와 파일 규칙, 그리고 권장되는 구조에 대해 설명합니다.
 
+---
 
+## 기본 디렉터리 구조
+```
+my-next-app/
+├── app/ or pages/       # 라우팅 디렉터리 (Next.js 13 이상은 app 권장)
+├── components/          # 재사용 가능한 UI 컴포넌트
+├── public/              # 정적 파일(이미지, 폰트, 아이콘 등)
+├── styles/              # 전역 및 모듈 스타일(CSS, SCSS, Tailwind 등)
+├── lib/                 # 유틸리티 함수, API 클라이언트, 헬퍼 함수
+├── hooks/               # 커스텀 React 훅
+├── context/             # 전역 상태 관리(Context API 등)
+├── middleware.ts        # 요청 전 처리 로직
+├── next.config.js       # Next.js 환경설정
+├── package.json
+└── tsconfig.json        # (TypeScript 프로젝트일 경우)
+```
+---
 
+## 주요 디렉터리 설명
 
+### ✅ `app/` (Next.js 13 이상, App Router)
+- 최신 Next.js에서 권장되는 구조.
+- 서버 컴포넌트(Server Components)와 클라이언트 컴포넌트(Client Components) 혼합 가능.
+- 라우팅은 각 폴더와 예약 파일을 기반으로 이루어짐.
 
+**예약 파일**
+- `page.tsx` → 라우트 페이지
+- `layout.tsx` → 하위 라우트 공통 레이아웃
+- `loading.tsx` → 로딩 UI
+- `error.tsx` → 에러 UI
+- `not-found.tsx` → 404 페이지
+- `route.ts` → API 라우트
 
+**예시**
+```
+app/
+├── dashboard/
+│    ├── page.tsx
+│    ├── layout.tsx
+│    └── settings/
+│         └── page.tsx
+├── layout.tsx
+└── page.tsx
+```
 
+---
 
+### ✅ `pages/` (기존 Router 방식)
+- `pages` 디렉터리에 있는 파일 = 라우트
+- `pages/api/` 안의 파일 = API 엔드포인트
+- 특별한 예약 파일:
+  - `_app.tsx` → 앱 전역 설정
+  - `_document.tsx` → HTML 문서 구조
 
+---
 
+### ✅ `components/`
+- 재사용 가능한 UI 단위 저장소  
+- 예: `Button.tsx`, `Navbar.tsx`, `Footer.tsx`
 
+---
 
+### ✅ `public/`
+- 정적 자산(이미지, 폰트, 아이콘 등) 저장  
+- `/public/logo.png` → `http://localhost:3000/logo.png`
 
+---
 
+### ✅ `styles/`
+- 전역 및 모듈 스타일 관리  
+- `globals.css` → 전역 스타일  
+- `Button.module.css` → 특정 컴포넌트 전용 스타일  
 
+---
+
+### ✅ `lib/`
+- DB 연결, API 호출, 헬퍼 함수 등  
+- 예: `lib/api.ts`, `lib/db.ts`
+
+---
+
+### ✅ `hooks/`
+- 커스텀 React 훅 모음  
+- 예: `useAuth.ts`, `useDarkMode.ts`
+
+---
+
+### ✅ `context/`
+- 전역 상태 관리 (React Context API 등)
+
+---
+
+### ✅ `middleware.ts`
+- 요청(Request) 단계에서 실행되는 코드 정의  
+- 예: 인증 체크, 리다이렉트 처리  
+
+---
+
+## App Router vs Pages Router 비교
+
+| 항목 | App Router (`app/`) | Pages Router (`pages/`) |
+|------|---------------------|--------------------------|
+| 도입 버전 | Next.js 13 이상 | Next.js 12 이하 (기존) |
+| 렌더링 방식 | 기본 Server Component | 기본 Client Component |
+| 라우팅 | 폴더 + 예약 파일 기반 | 파일명 기반 |
+| 레이아웃 | `layout.tsx` 지원 (중첩 가능) | `_app.tsx` 사용 (전역) |
+| API | `app/api/route.ts` | `pages/api/*.ts` |
+| 권장 여부 | ✅ 권장 (미래 지향) | ⚠️ 신규 프로젝트에서는 비권장 |
+
+---
+
+## 권장 사항
+1. **일관성 유지**  
+   → 디렉터리 네이밍 규칙을 팀 내에서 통일합니다.
+2. **관심사 분리**  
+   → 컴포넌트, 훅, API 로직, 스타일을 명확히 구분합니다.
+3. **모듈화**  
+   → 재사용 가능한 단위로 분리하여 유지보수를 쉽게 합니다.
+4. **App Router 권장**  
+   → 신규 프로젝트에서는 `app/` 디렉터리 구조 사용을 권장합니다.
+
+---  
+
+# 📂 Folder and File Conventions (폴더 및 파일 규칙)
+
+## 개요
+Next.js는 **파일 시스템 기반 라우팅**을 사용하기 때문에, 폴더와 파일의 이름과 배치가 매우 중요합니다.  
+이 문서에서는 Next.js에서 자주 사용되는 **예약 폴더/파일**과 **권장 네이밍 규칙**을 정리합니다.
+
+---
+
+## 1. 예약 디렉터리
+
+| 디렉터리 | 설명 |
+|----------|------|
+| `app/` | Next.js 13 이상에서 사용하는 App Router 디렉터리. 페이지, 레이아웃, 로딩 UI 등을 정의. |
+| `pages/` | 기존 Pages Router 디렉터리. 각 파일이 라우트가 됨. `pages/api/`는 API 라우트로 사용. |
+| `public/` | 정적 파일(이미지, 폰트, 아이콘 등)을 저장. `/public` 하위 파일은 도메인 루트 경로에서 접근 가능. |
+| `styles/` | 전역 및 모듈 CSS/SCSS, Tailwind 설정 파일 저장. |
+| `components/` | 재사용 가능한 UI 컴포넌트 모음. |
+| `lib/` | API 호출, DB 연결, 헬퍼 함수 등 비즈니스 로직 모음. |
+| `hooks/` | 커스텀 React 훅 모음. |
+| `context/` | 전역 상태 관리(Context API 등). |
+| `api/` (App Router) | `app/api/route.ts` 형태로 API 라우트 정의. |
+
+---
+
+## 2. 예약 파일 (App Router 기준)
+
+| 파일명 | 설명 |
+|--------|------|
+| `page.tsx` | 라우트에 해당하는 페이지 컴포넌트. |
+| `layout.tsx` | 하위 라우트에 공통 적용되는 레이아웃. |
+| `loading.tsx` | 라우트 전환 시 로딩 UI. |
+| `error.tsx` | 특정 라우트에서 발생한 에러 처리 UI. |
+| `not-found.tsx` | 404 Not Found 페이지. |
+| `route.ts` | API 라우트 핸들러. (`GET`, `POST` 등 정의 가능) |
+| `middleware.ts` | 라우트 진입 전 실행되는 미들웨어. (인증, 리다이렉트 등) |
+| `_app.tsx` (Pages Router) | 앱 전역 레이아웃 및 상태 관리 정의. |
+| `_document.tsx` (Pages Router) | HTML 문서 구조를 커스터마이징. |
+
+---
+
+## 3. 파일 네이밍 규칙
+
+1. **컴포넌트 파일**  
+   - PascalCase 권장 (예: `Navbar.tsx`, `UserCard.tsx`)
+2. **훅 파일**  
+   - `use` 접두사 사용 (예: `useAuth.ts`, `useDarkMode.ts`)
+3. **스타일 파일**  
+   - CSS 모듈: `ComponentName.module.css`  
+   - 전역 CSS: `globals.css`
+4. **유틸/라이브러리 파일**  
+   - camelCase 또는 kebab-case 권장 (예: `fetchData.ts`, `format-date.ts`)
+5. **폴더명**  
+   - 소문자 및 kebab-case 권장 (예: `user-profile/`, `dashboard-settings/`)
+
+---
+
+## 4. 예시 구조
+```
+my-next-app/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── dashboard/
+│   │   ├── page.tsx
+│   │   ├── layout.tsx
+│   │   └── loading.tsx
+│   └── api/
+│       └── route.ts
+├── components/
+│   ├── Navbar.tsx
+│   └── UserCard.tsx
+├── hooks/
+│   └── useAuth.ts
+├── lib/
+│   └── fetchData.ts
+├── public/
+│   └── logo.png
+├── styles/
+│   ├── globals.css
+│   └── Button.module.css
+├── middleware.ts
+└── next.config.js
+```
+---
+## 5. 권장 사항
+
+- **의미 있는 네이밍** → 파일명과 폴더명이 기능을 잘 설명하도록 작성합니다.  
+- **관심사 분리** → UI(`components/`), 로직(`lib/`), 상태(`context/`)를 구분합니다.  
+- **일관성 유지** → 팀 내에서 네이밍 규칙과 구조를 표준화합니다.  
+- **예약 파일은 반드시 규칙 준수** → 오탈자 시 라우팅이나 기능이 정상 동작하지 않을 수 있습니다.  
+
+---
+# 🌐 Routing in Next.js (라우팅)
+
+## 개요
+Next.js는 **파일 시스템 기반 라우팅(File-based Routing)**을 사용합니다.  
+즉, 프로젝트의 디렉터리와 파일 구조가 곧 애플리케이션의 URL 구조가 됩니다.  
+
+Next.js에는 두 가지 라우팅 방식이 있습니다:
+1. **Pages Router** (기존 방식, `pages/` 디렉터리 사용)
+2. **App Router** (Next.js 13 이상 권장, `app/` 디렉터리 사용)
+
+---
+
+## 1. Pages Router (기존 방식)
+
+### 라우팅 규칙
+- `pages/` 디렉터리 안의 파일 → URL 경로가 됨.
+- `pages/index.tsx` → `/`
+- `pages/about.tsx` → `/about`
+- `pages/blog/[id].tsx` → `/blog/1`, `/blog/2` (동적 라우팅)
+
+### 예약 파일
+- `_app.tsx` → 모든 페이지에 공통 적용되는 컴포넌트 (전역 레이아웃, 상태 관리 등)
+- `_document.tsx` → HTML 문서 구조 커스터마이징
+- `pages/api/` → API 라우트 정의 (`/api/hello` 등)
+
+### 예시  
+```
+pages/
+├── index.tsx        → “/”
+├── about.tsx        → “/about”
+├── blog/
+│    └── [id].tsx    → “/blog/1”
+└── api/
+└── hello.ts    → “/api/hello”
+```  
+---
+
+## 2. App Router (Next.js 13 이상, 권장)
+
+### 라우팅 규칙
+- `app/` 디렉터리의 **폴더가 라우트**를 의미.
+- 각 폴더 안의 **`page.tsx`** 파일이 해당 경로의 페이지로 렌더링됨.
+- 중첩 라우트(Nested Route), 동적 라우트(Dynamic Route), 레이아웃(Layout) 등을 지원.
+
+### 예약 파일
+- `page.tsx` → 해당 경로의 페이지
+- `layout.tsx` → 하위 경로에 공통 적용되는 레이아웃
+- `loading.tsx` → 로딩 UI
+- `error.tsx` → 에러 UI
+- `not-found.tsx` → 404 페이지
+- `route.ts` → API 라우트
+
+### 동적 라우팅
+- `[id]` 폴더 사용 → `app/blog/[id]/page.tsx` → `/blog/1`, `/blog/2`
+
+### 예시
+```
+pp/
+├── page.tsx            → “/”
+├── about/
+│    └── page.tsx       → “/about”
+├── blog/
+│    ├── page.tsx       → “/blog”
+│    └── [id]/
+│         └── page.tsx  → “/blog/1”, “/blog/2”
+├── dashboard/
+│    ├── layout.tsx     → 대시보드 공통 레이아웃
+│    ├── page.tsx       → “/dashboard”
+│    └── settings/
+│         └── page.tsx  → “/dashboard/settings”
+└── api/
+└── route.ts       → “/api”
+```  
+---
+---
+
+## 3. 라우팅 비교 (App Router vs Pages Router)
+
+| 항목 | App Router (`app/`) | Pages Router (`pages/`) |
+|------|---------------------|--------------------------|
+| 도입 버전 | Next.js 13 이상 | Next.js 12 이하 |
+| 라우트 정의 | 폴더 + 예약 파일 기반 | 파일명 기반 |
+| 동적 라우팅 | `[id]` 폴더 | `[id].tsx` 파일 |
+| 중첩 라우팅 | `layout.tsx`로 지원 | 불가능 (전역 `_app.tsx`만 존재) |
+| API 라우트 | `app/api/route.ts` | `pages/api/*.ts` |
+| 로딩 상태 | `loading.tsx` | 직접 구현 필요 |
+| 권장 여부 | ✅ 권장 | ⚠️ 신규 프로젝트 비권장 |
+
+---
+
+## 4. 링크 이동 (Navigation)
+
+- Next.js는 **`<Link>` 컴포넌트**를 사용해 클라이언트 측 라우팅을 지원합니다.
+- 페이지 전환 시 전체 새로고침 없이 빠르게 이동 가능.
+
+### 예시
+```tsx
+import Link from "next/link";
+
+export default function Home() {
+  return (
+    <div>
+      <h1>홈 페이지</h1>
+      <Link href="/about">About 페이지로 이동</Link>
+    </div>
+  );
+}
+```
+## Open Graph Protocol
+* 웹사이트나 페이스북, 인스타그램, X (트위터), 카카오톡 등에 링크를 전달할 때 '미리보기' 를 생성하는 프로토콜 입니다.
+* Open Graph Protocol이 대표적인 프로토콜 입니다.
+* 페이스북이 주도하는 표준화 규칙으로 대부분의 SNS 플랫폼에서 활용되고 있습니다.
+* 모든 플랫폼이 동일한 방식으로 오픈 그래프를 처리하는 것은 아닙니다.
+* 웹페이지의 메타 태그에 선언 합니다.
+```jsx
+<head>
+‹meta property="og: type" content="website"›
+‹meta property="og:url" content="https://example.com/page.html*>
+〈meta property="og: title" content="페이지 제목">
+〈meta property="og:description" content="페이지 설명 요약">
+‹ meta property="og: image" content-"https://example.com/image.jpg">
+〈meta property="0g: site_name" content="사이트 이름">
+‹meta property="og:locale" content="ko_KR">
+</head>
+```
+## Organizing your project(프로젝트 구성하기)
+* Next.js는 프로젝트 파일을 어떻게 구성하고 어디에 배치할지에 대한제약이 없습니다.
+* 하지만 프로젝트 구성에 도움이 되는 몇 가지 기능을 제공합니다.
+### [ component의 계층 구조 ] Component hierarchy
+* 특수 파일에 정의된 component는 특정 계층 구조로 렌더링 됩니다.
+
+2. Organizing your project(프로젝트 구성하기)
+*  app 디렉토리의 파일은 기본적으로 안전하게 코로케이션 될 수 있으므로, 코로케이션에 비공개 폴더는 불필요 합니다. 하지만 다음과 같은 경우에는 유용할 수 있습니다.  
+✓ UI 로직과 라우팅 로직을 분리합니다.  
+✓ 프로젝트와 Nextjs 생태계 전반에서 내부 파일을 일관되게 구성합니다.  
+✓ 코드 편집기에서 파일을 정렬하고 그룹화합니다.  
+✓ 향후 Nextjs 파일 규칙과 관련된 잠재적인 이름 충돌을 방지합니다.  
+*  알아두면 좋은 정보 : 
+  - 프레임워크 규칙은 아니지만, 동일한 밑줄 패턴을 사용하여 비공개 폴더 외부의 파일을" 비공개"로 표시하는 것도 고려할 수 있습니다.
+  - 폴더 이름 앞에 %5F(밑줄로 URL 인코딩된 형태)를 접두사로 붙여 밑줄로 시작하는 URL
+세그먼트를 만들 수 있습니다. %5FfolderName # 아스키 코드의 URL-encoding
+  - 비공개 폴더를 사용하지 않는 경우, 예상치 못한 이름 충돌을 방지하기 위해 Nextjs의 특 수 파일 규칙을 아는 것이 좋습니다.  
 
 
 
