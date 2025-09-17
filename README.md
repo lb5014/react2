@@ -1,3 +1,119 @@
+# 9월 17일 강의내용
+### 1교시  
+## 3장
+
+03. Layouts and Pages
+
+Next.js는 파일 시스템 기반 라우팅(File-system based routing) 을 사용합니다.
+즉, 폴더와 파일 구조를 통해 경로(Route)를 정의할 수 있습니다.
+
+이번 장에서는 다음 내용을 다룹니다:
+* 레이아웃(Layout): 공통 UI 구조(헤더, 푸터, 사이드바 등)를 정의하는 방법
+* 페이지(Page): 각 경로에 대응되는 콘텐츠를 구현하는 방법
+*	연결 방법: 레이아웃과 페이지를 서로 연결하여 일관성 있는 화면을 구성하는 방법
+
+⸻
+
+👉 핵심 포인트
+1.	app/ 또는 pages/ 디렉토리 안의 파일이 곧 라우트(route) 가 된다.
+*	예: pages/about.js → /about 경로
+*	예: app/dashboard/page.js → /dashboard 경로
+2.	레이아웃은 여러 페이지에서 공유되는 UI를 정의한다.
+* 예: app/layout.js → 전체 앱의 공통 레이아웃
+*	예: app/dashboard/layout.js → /dashboard 하위 페이지들의 공통 레이아웃
+3.	페이지와 레이아웃 연결
+*	각 페이지(page.js)는 해당 폴더의 layout.js를 감싸는 구조로 렌더링된다.
+*	따라서 재사용 가능한 UI를 손쉽게 구성할 수 있다.
+
+✍️ 간단한 예시
+~~~tsx
+// app/layout.js (전체 레이아웃)
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <header>공통 헤더</header>
+        <main>{children}</main>
+        <footer>공통 푸터</footer>
+      </body>
+    </html>
+  )
+}
+~~~
+~~~tsx
+// app/page.js (메인 페이지)
+export default function HomePage() {
+  return <h1>홈페이지</h1>
+}
+~~~  
+1. Creating a page(페이지 만들기)
+    * Next.js는 파일 시스템 기반 라우팅을 사용하기 때문에 폴더와 파일을 사용하여 경로를 정의할 수 있습니다.
+    * 이번 장에서는 레이아웃과 페이지를 만들고 서로 연결하는 방법을 설명합니다.
+    * page는 특정 경로에서 렌더링되는 UI입니다.
+    * page를 생성하려면 app 디렉터리에 page파일을 추가하고, React 컴포넌트를 default export합니다. 예를 들어, 인덱스 page(/)를 생성하려면 다음과 같이 합니다.
+#### 2장에서 이미 학습한 내용이지만 다시 한 번 작성해 보세요.
+2. Creating a layout(레이아웃 만들기)
+    * Layout은 여러 페이지에서 공유 되는 UI입니다.
+    * layout은 네비게이션에서 state 및 상호작용을 유지하며, 다시 렌더링 되지는 않습니다.
+    * layout 파일에서 React 컴포넌트의 default export를 사용하여 Layout을 정의할 수 있 습니다.
+    * layout 컴포넌트는 page 또는 다른 니다.
+
+~~~tsx
+<Layout>
+<Page/>
+</Layout>
+
+<Layout>
+<AnotherLayout>
+<Page/>
+</AnotherLayout>
+</Layout>  
+~~~
+* children은 컴포넌트 안에 감싸진 요소(컴포넌트)를 의미합니다.
+* 다음 코드에서 〈page/>는 <Layout/>컴포넌트의 Children입니다.
+* layout 컴포넌트를 만들 때 그 안에 들어갈 콘텐츠(children)를 받을 수 있게 해야 하 고, 그 컨텐츠는 page또는 Layout 컴포넌트가 될 수도 있다는 의미 입니다.
+
+3. Creating a nested route(중첩 라우트 만들기)
+* 중첩 라우트는 다중 URL 세그먼트로 구성된 라우트입니다.
+* 예를 들어, /bLog/[slug]경로는 세 개의 세그먼트로 구성됩니다.
+- / (Root Segment)
+- blog (Segment)
+- [slug] (Leaf Segment)
+
+[ Next.js에서 ]
+* 폴더는 URL 세그먼트에 매핑되는 경로 세그먼트를 정의하는데 사용됩니다.
+  #### 즉 폴더가 URL 세그먼트가 된다는 의미 입니다.
+* 파일(예: page 및 layout)은 세그먼트에 표시되는 UI를 만드는 데 사용됩니다.
+* 폴더를 중첩하면 중첩된 라우트를 만들 수 있습니다.
+
+3. Creating a nested route(중첩 라우트 만들기)
+    * 폴더를 계속 중첩하여 중첩된 경로를 만들 수 있습니다.
+    * 예를 들어 특정 블로그 게시물에 대한 경로를 만들려면 blog 안에 새 [slug] 폴더를 만 들고 page 파일을 추가합니다.
+    * 폴더 이름을 대괄호(예: [slug])로 묶으면 데이터에서 여러 페이지를 생성하는데 사용 되는 동적 경로 세그먼트가 생성됩니다. 예: 블로그 게시물, 제품 페이지 등.
+
+## [slug]의 이해
+#### slug는 사이트의 특정 페이지를 쉽게 읽을 수 있는 형태로 식별하는 URL의 일부입니다.
+  * 신문이나 잡지 등에서 핵심 의미를 포함하는 단어만을 조합해 간단 명료하게 제목을 작성하는 것을 슬러그라고 하는 것에서 유래 하였습니다.
+#### 문서의 경로 /bLog/[slug]의 [slug] 부분은 불러올 데이터의 key를 말합니다.
+#### 따라서 데이터에는 Slug key가 반드시 있어야 합니다.
+
+~~~tsx
+// dummy data
+
+export const posts = [
+{ slug: "nextis", title: "Next.js 소개", content: "Next.js는 React 기반의 풀스택 프레임워크입니다." },
+{ slug: "routing", title: "App Router 알아보기", content: "Next,js 13부터는 App Router가 도입되었습니다." },
+{ slug: "ssr-ssg", titLe: "SSR VS SS6", content: "서버사이드 렌더링과 정적 사이트 생성의 차이를 알아봅니다." },
+{ slug: "dynamic-routes", title: "동적 라우팅", content: "Next.js에서 [slug]를 활용한 라우팅 방식입니다." },
+];
+~~~
+#### 예를 들어 첫 번째 데이터를 호출하는 경우라면 /blog/nextis 라고 호출합니다.
+#### 먼저 더미 데이터를 만들고 실습을 해보도록 하겠습니다.
+#### [slug]는 반드시 Slug일 필요는 없습니다. 단, [foo]라고 했다면 데이터에 반드시 f00 key(필드)가 있어야 합니다.
+
+
+
+
 # 9월 10일 강의내용
 ### 1교시  
 ## 2장  
