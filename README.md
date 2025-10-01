@@ -1,3 +1,309 @@
+# 10월1일 강의내용 
+### 1교시  
+## 5장  
+# Linking and Navigating
+
+Next.js 앱에서 라우팅 간 이동을 더 빠르고 부드럽게 만드는 방법들을 다룹니다.  
+특히 **프리패칭(prefetching), 스트리밍, 클라이언트 측 전환(client-side transitions)** 등을 중심으로 설명합니다.  
+(공식 문서 기준)  [oai_citation_attribution:0‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+---
+
+## How Navigation Works (네비게이션 작동 방식)
+
+Next.js에서는 기본적으로 **서버 컴포넌트(Server Components)**를 사용하여 페이지를 렌더링합니다.  
+라우트 전환 시 클라이언트가 서버 응답을 기다려야 하는 지연이 있을 수 있는데,  
+이를 보완하기 위해 여러 최적화 기법이 사용됩니다: **프리패칭**, **스트리밍**, **클라이언트 측 전환** 등이 그것입니다.  [oai_citation_attribution:1‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+### Server Rendering (서버 렌더링)
+
+- Next.js의 페이지와 레이아웃은 기본적으로 서버에서 렌더링됩니다.  [oai_citation_attribution:2‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- 정적 렌더링(Static rendering) 또는 동적 렌더링(Dynamic rendering)을 사용합니다.  
+- 하지만 클라이언트는 서버 응답이 도착할 때까지 기다려야 하므로, 사용자 입장에서는 지연이 발생할 수 있습니다.
+
+### Prefetching (프리패칭)
+
+- 프리패칭은 다음에 사용자가 방문할 가능성이 있는 라우트를 미리 가져오는 방식입니다.  [oai_citation_attribution:3‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- Next.js는 `<Link>` 컴포넌트로 연결된 경로를 뷰포트(viewport)에 나타날 때 자동으로 프리패칭합니다.  [oai_citation_attribution:4‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- 정적 경로(Static route)는 전체 경로를 미리 가져오고,  
+  동적 경로(Dynamic route)는 `loading.tsx`가 있을 경우 일부만 프리패칭하거나 프리패칭을 건너뛰기도 합니다.  [oai_citation_attribution:5‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+### Streaming (스트리밍)
+
+- 스트리밍은 서버가 전체 콘텐츠가 완성되기를 기다리지 않고, 준비된 부분부터 클라이언트로 전송하는 방식입니다.  
+- 이를 통해 사용자는 일부 콘텐츠를 더 빨리 볼 수 있고, 로딩 UI나 레이아웃을 먼저 렌더링할 수 있습니다.  [oai_citation_attribution:6‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- 동적 라우트에서는 `loading.tsx`를 만들어 로딩 상태 UI를 먼저 보여주는 전략을 쓰는 것이 권장됩니다.  [oai_citation_attribution:7‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- Next.js는 이런 `loading.tsx`를 내부적으로 `<Suspense>` 경계로 감싸 처리합니다.  [oai_citation_attribution:8‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+### Client-side Transitions (클라이언트 측 전환)
+
+- 전통적인 서버 렌더 방식에서는 라우트 이동 시 전체 페이지를 다시 로드해야 했습니다.  
+- Next.js는 `<Link>`를 사용하여 클라이언트 측 전환을 지원함으로써, UI의 일부만 업데이트하고 레이아웃은 유지합니다.  [oai_citation_attribution:9‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- 이렇게 하면 사용자 경험이 더 자연스럽고 빠르게 느껴집니다.  [oai_citation_attribution:10‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+---
+
+## What Can Make Transitions Slow? (전환이 느려질 수 있는 요인들)
+
+아래 요인들이 전환을 느리게 만들 수 있으며, 그에 대한 대응도 중요합니다:
+
+### Dynamic Routes Without `loading.tsx`
+
+- 동적 경로로 이동할 때 `loading.tsx`가 없으면 클라이언트는 서버 응답을 기다려야 합니다.  
+- 따라서 사용자에게 앱이 멈춘 것처럼 보일 수 있습니다.  
+- 해결책: 해당 동적 경로에 `loading.tsx`를 추가하여 프리패칭과 부분 렌더링을 활용하세요.  [oai_citation_attribution:11‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+### Dynamic Segments Without `generateStaticParams`
+
+- 동적 경로가 정적 생성(static generation) 대상이 될 수 있음에도 `generateStaticParams`가 없는 경우,  
+  빌드 시 미리 생성되지 않고 모두 요청 시 렌더링됩니다.  
+- 이 경우 서버 응답 지연이 생기며 사용자 경험이 저하될 수 있습니다.  
+- 해결책: `generateStaticParams`를 구현하여 가능한 경로들을 미리 생성하세요.  [oai_citation_attribution:12‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)
+
+### Slow Networks (느린 네트워크)
+
+- 느린 네트워크 환경에서는 프리패칭이 완료되지 못한 상태에서 사용자가 링크를 클릭할 수 있습니다.  
+- 이 경우 `loading.tsx`가 미리 렌더링되지 않았을 가능성이 있습니다.  
+- 대응책: `useLinkStatus` 훅을 사용하여 전환 상태를 감지하고, 로딩 인디케이터(스피너 등)를 표시할 수 있습니다.  [oai_citation_attribution:13‡nextjs.org](https://nextjs.org/docs/app/getting-started/linking-and-navigating)  
+- 예:  
+  ```tsx
+  'use client'
+  import { useLinkStatus } from 'next/link'
+
+  export default function LoadingIndicator() {
+    const { pending } = useLinkStatus()
+    return pending ? <div className="spinner">Loading...</div> : null
+  }
+  ```  
+Disabling Prefetching  
+
+	•	<Link>에 prefetch={false}를 설정하면 자동 프리패칭을 비활성화할 수 있습니다.
+	•	이 옵션은 링크가 많은 경우 리소스 낭비를 막기 위해 유용할 수 있습니다.  ￼
+	•	다만 프리패칭을 꺼놓으면 정적 경로도 사용자가 클릭할 때만 가져오게 되고, 동적 경로는 서버 렌더 후에야 화면 이동이 가능합니다.
+	•	절충안: hover 시에만 프리패칭을 활성화하는 방식도 사용할 수 있습니다.  ￼
+
+Hydration Not Completed  
+
+	•	<Link> 컴포넌트는 클라이언트 컴포넌트여야 하므로 초기 로드 시 하이드레이션(hydration)이 완료되어야 동작합니다.
+	•	초기 번들 크기가 크면 하이드레이션이 지연되어 <Link>의 프리패칭 기능도 늦어질 수 있습니다.
+	•	해결책: 번들 크기를 줄이고, 클라이언트쪽 로직을 서버로 일부 이전하는 전략 등이 있습니다.  ￼
+
+Examples (예제 코드)
+
+Prefetching in Layout
+```tsx
+// app/layout.tsx
+import Link from 'next/link'
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html>
+      <body>
+        <nav>
+          {/* 이 링크는 뷰포트에 보이면 자동으로 프리패칭 */}
+          <Link href="/blog">Blog</Link>
+          {/* 일반 <a> 태그는 프리패칭하지 않음 */}
+          <a href="/contact">Contact</a>
+        </nav>
+        {children}
+      </body>
+    </html>
+  )
+}
+```  
+
+Loading for Dynamic Route  
+```tsx
+// app/blog/[slug]/loading.tsx
+export default function Loading() {
+  return <div>Loading post...</div>
+}
+```  
+
+Using useLinkStatus
+```tsx
+// app/components/LoadingIndicator.tsx
+'use client'
+import { useLinkStatus } from 'next/link'
+
+export default function LoadingIndicator() {
+  const { pending } = useLinkStatus()
+  return pending ? <div className="spinner">로딩 중...</div> : null
+}
+```
+
+# 9월21일 강의내용 
+### 1교시  
+## 4장  
+#### searchParams란?
+#### URL의 쿼리 문자열(Query String)을 읽는 방법입니다.
+#### 예시 URL:/products?category=shoes&page=2
+#### 여기서 category=shoes, page=2가 search parameters입니다
+```jsx
+// app/products/page.js
+export default function ProductsPage({ searchParams }) {
+return <p>카테고리: {searchparams.category}</p>;
+}
+```  
+#### searchParans는 컴포넌트의 props로 전달되며, 내부적으로는 URLSearchParans 처럼 작동합니다.
+#### 실습은 뒤에서 하겠습니다.
+
+# 왜 "동적 렌더링"이 되는가?
+#### Next.js에서 페이지는 크게 정적(static) 또는 동적(dynamic)으로 렌더링될 수 있습니다.
+#### searchParams는 요청이 들어와야만 값을 알 수 있기 때문에, Next.js는 이 페이지를 정적으로 미리 생성할 수 없고, 요청이 올 때마다 새로 렌더링해야 합니다.
+#### 따라서 해당 페이지는 자동으로 동적 렌더링(dynamic rendering)으로 처리됩니다.
+#### 즉, searchParans를 사용하는 순간 Next.js는"이 페이지는 요청이 들어와야 동작하네?- 그럼 정적으로 미리 만들 수 없겠다!" 라고 판단합니다.
+#### 동적 렌더링 vs 정적 렌더링 비교
+
+# [slug]의 이해
+#### 데이터 소스가 크다면 find는 0(n)이므로 DB 쿼리로 바꿔야 합니다.
+* : 0(n)은 알고리즘의 시간 복잡도가 입력 데이터의 크기 n에 비례하여 시간이나 메모리 사용량이 선형적으로 증가하는 것을 의미합니다.
+#### 앞의 코드에서는 Promise< ... >를 사용하지 않아도 오류 없이 동작했습니다.
+#### 하지만 params가 동기식처럼 보이지만 사실은 비동기식이라는 것을 좀더 명확히 하기 위해 사용합니다. 코드의 가독성이 좋습니다.
+#### 또 한가지 Promise를 명시해주면 await을 깜빡했을 때 TypeScript가 이를 잡아줍니다.
+#### 결론적으로 오류와 상관없이 Promise 사용을 권장합니다.
+
+
+# 📖 Layouts and Pages in Next.js
+
+Next.js의 **App Router**는 `layouts`와 `pages`라는 개념을 중심으로 애플리케이션의 구조를 설계합니다. 이 문서에서는 **Layouts**와 **Pages**가 어떻게 동작하고, 어떤 규칙을 기반으로 구성되며, 프로젝트에서 어떻게 활용되는지 상세히 설명합니다.
+
+---
+
+## 🔹 Layouts (레이아웃)
+
+### 1. 개념
+레이아웃은 여러 페이지에서 **공통적으로 유지되는 UI**를 정의합니다.  
+예를 들어, 네비게이션 바, 사이드바, 푸터처럼 모든 페이지에서 동일하게 보여야 하는 요소들을 레이아웃으로 정의하면, 페이지 전환 시에도 해당 요소들은 다시 렌더링되지 않고 그대로 유지됩니다.  
+
+이 방식은 사용자 경험(UX)을 개선하며, 코드 중복을 줄이고 일관된 디자인을 제공합니다.
+
+---
+
+### 2. 특징
+- **페이지 간 전환 시 유지**  
+  레이아웃은 클라이언트 측에서 상태가 보존되므로, 예를 들어 사이드바의 열림 상태나 입력 폼 상태 등이 페이지 이동 시에도 유지됩니다.
+- **중첩 레이아웃 지원**  
+  레이아웃은 트리 구조를 따르므로, 특정 섹션마다 별도의 레이아웃을 정의할 수 있습니다.
+- **서버 컴포넌트(Server Components)**  
+  기본적으로 레이아웃은 서버 컴포넌트로 동작하며, 필요 시 클라이언트 컴포넌트로 변환할 수도 있습니다.
+
+---
+
+### 3. 기본 구조 예시
+
+```tsx
+// app/layout.tsx
+import './globals.css'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'My Application',
+  description: 'Next.js Layout Example',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <header>
+          <nav>네비게이션 바</nav>
+        </header>
+        <main>{children}</main>
+        <footer>공통 푸터</footer>
+      </body>
+    </html>
+  )
+}
+```  
+	•	children은 레이아웃이 감싸고 있는 하위 페이지나 중첩 레이아웃을 의미합니다.
+	•	app/layout.tsx는 최상위 레이아웃으로 프로젝트 전체에 적용됩니다.
+
+⸻
+
+4. 중첩 레이아웃 (Nested Layouts)
+
+특정 경로마다 별도의 레이아웃을 정의할 수 있습니다.  
+```tsx
+// app/dashboard/layout.tsx
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <section>
+      <aside>대시보드 사이드바</aside>
+      <div>{children}</div>
+    </section>
+  )
+}
+```  
+이렇게 하면 /dashboard/* 경로 아래의 모든 페이지는 DashboardLayout으로 감싸집니다.
+
+⸻
+
+🔹 Pages (페이지)
+
+1. 개념
+
+페이지는 특정 URL 경로와 연결된 UI 단위를 의미합니다.
+Next.js는 **파일 기반 라우팅(File-based Routing)**을 제공하므로, app/ 디렉토리 내에 생성한 폴더와 파일 이름이 곧 라우트(URL 경로)가 됩니다  
+2. 기본 규칙
+  
+        •	app/page.tsx → 루트 경로(/)
+	    •	app/about/page.tsx → /about
+	    •	app/blog/page.tsx → /blog
+	    •	동적 라우팅 지원 → app/blog/[id]/page.tsx → /blog/1, /blog/2, …  
+```tsx
+// app/page.tsx
+export default function HomePage() {
+  return (
+    <div>
+      <h1>홈페이지</h1>
+      <p>이곳은 루트 경로 (/) 입니다.</p>
+    </div>
+  )
+}
+```  
+```tsx
+// app/about/page.tsx
+export default function AboutPage() {
+  return (
+    <div>
+      <h1>소개 페이지</h1>
+      <p>이 페이지는 /about 경로와 연결됩니다.</p>
+    </div>
+  )
+}
+```  
+🔹 Layouts와 Pages의 관계  
+
+	•	Layouts는 애플리케이션의 전체적인 뼈대를 담당합니다. (예: Header, Sidebar, Footer)
+	•	Pages는 각 URL 경로에 맞는 콘텐츠를 보여줍니다.
+
+즉, 레이아웃은 유지되는 영역, 페이지는 바뀌는 영역이라고 이해하면 됩니다.  
+
+🔹 프로젝트 구조 예시  
+```
+app/  
+├── layout.tsx         # 최상위 레이아웃  
+├── page.tsx           # 루트 페이지 (/)  
+├── about/  
+│   └── page.tsx       # /about  
+├── dashboard/  
+│   ├── layout.tsx     # /dashboard 레이아웃  
+│   ├── page.tsx       # /dashboard  
+│   └── settings/  
+│       └── page.tsx   # /dashboard/settings  
+```  
+✅ 정리  
+
+	•	Layouts
+	•	여러 페이지에서 반복되는 공통 UI 정의
+	•	상태 보존 및 중첩 가능
+	•	서버 컴포넌트가 기본
+	•	Pages
+	•	URL 경로와 매핑되는 개별 화면
+	•	파일 기반 라우팅 제공
+	•	동적 라우팅 지원  
+
 # 9월 17일 강의내용
 ### 1교시  
 ## 3장
