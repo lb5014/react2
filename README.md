@@ -1,3 +1,153 @@
+# 10월 17일 강의내용  
+### 1교시  
+## 5장
+# Introduction
+* 기본적으로 Layout과 page는 server component 입니다.
+* server에서 데이터를 가져와 UI의 일부를 렌더링할 수 있고, 선택적으로 결과를 cache 한 후 client로 스트리밍할 수 있습니다.
+* 상호작용이나 브라우저 API가 필요한 경우 Client component를 사용하여 기능을 계층화 할 수 있습니다.
+---
+* 이번 장에서는
+* Next.js에서 server 및 client component가 작동하는 방식과 이를 사용하는 시기를 설명하고, 
+* 애플리케이션에서 이 컴포넌트를 사용하는 방법에 대한 예제를 소개 합니다.
+
+## 1. server 및 client component를 언제 사용해야 하나요?
+* client 환경과 server 환경은 서로 다른 기능을 가지고 있습니다.
+* server 및 client component를 사용하면 사용하는 사례에 따라 각각의 환경에서 필요한 로직을 실행할 수 있습니다.
+* 다음과 같은 항목이 필요할 경우에는 Client component를 사용합니다.
+  - state 및 event handler. 예 onclick, onChange.
+  - Lifecycle logic. 0|| useEffect.
+  - 브라우저 전용 API. 예 Localstorage, window, Navigator geolocation, 등
+  - 사용자 정의 Hook
+* 다음과 같은 항목이 필요할 경우에는 server component를 사용합니다.
+  - 서버의 데이터베이스 혹은 API에서 data를 가져오는 경우 사용합니다.
+  - API key, token 및 기타 보안 데이터를 client에 노출하지 않고 사용합니다.
+  - 브라우저로 전송되는 JavaScript의 양을 줄이고 싶을 때 사용합니다.
+  - 콘텐츠가 포함된 첫 번째 페인트(First Contentful Paint-FCP)를 개선하고, 콘텐츠를 client에 점진적으로 스트리밍합니다.
+
+# 1. server 및 client component를 언제 사용해야 하나요?
+* 예를 들어, <Pag> component는 게시물에 대한 데이터를 가져와서, cLient 측 상호 작 용을 처리하는 <LikeButton>에 props로 전달하는 server component입니다.
+#### 그리고, Qui/like-button은 client component이기 때문에 use client를 사용하고 있습 니다.
+
+## 문서의 코드를 완성해 봅시다. optimistic Update 
+[ 0ptimistic Update(낙관적 업데이트) ]
+* 사용자에 의해서 이벤트(예: 좋아요 버튼 클릭)가 발생 하면, 서버 응답을 기다리지 않
+고 클라이언트(브라우저)의 UI를 즉시 변경(업데이트)합니다.
+* 서버에 보낸 요청의 성공을 낙관(optimistic)한다고 가정해서 먼저 화면에 변화를 보여
+줍니다.
+* 서버에서 응답이 없으면, UI를 원래 상태로 되돌립니다(rollback)• # 네트워크 지연 동안에도 앱이 빠르게 반응"하도록 느끼게 하는 것이 목적입니다.
+1. (장점)
+    - 서버 응답 속도와 관계없이 즉각적인 피드백을 제공하여 사용자 경험을 향상시킵니다.
+    - 네트워크 상태가 나쁘거나 응답 시간이 길어도 사용자에게 체감되는 속도가 빠릅니다.
+2. (단점)
+    - 서버에서 오류가 발생하면, 사용자에게는 잠시 동안 잘못된 정보가 표시될 수 있습니다.
+    - 오류 발생 시 복구 로직이 필요합니다.
+
+# 문서의 코드를 완성해 봅시다. Like-button.tsx
+* Q/ui/Like-button.tsx에서는 state를 2개 사용하고 있습니다.
+```tsx
+const [count, setCount] = useState<number›(likes ?? 0)
+const [isLiking, setIsLiking] = useState(false)
+```  
+* count는 Like 버튼을 클릭한 횟수 입니다. (초기값 : data의 Like 필드)
+* isLiking은 서버에 요청이 진행 중인지"를 나타내는 state입니다. (초기값 : false)
+### [ isLiking state의 주요 역할 ]
+* 중복 클릭 방지 : isLiking이 true인 동안은 버튼을 disabled로 만들어 중복 요청 즉
+중복 낙관적 업데이트를 막는 역할을 합니다.
+* UI 피드백 : 로딩 상태 표시(스피너나 문구)를 위해 사용이 가능합니다.
+* 상태 안정화 : 서버에 요청이 끝날 때까지 추가 상태 변경을 잠시 멈추게 해서, 일관된 동작을 보장합니다.
+
+# 2. Next.js에서 server와 client component는 어떻게 작동합니까?
+### 2-1. server component의 작동
+* server에서 Next.js는 React의 API를 사용하여 렌더링을 조정합니다.
+* 렌더링 작업은 개별 라우팅 세그먼트 별 묶음(Chunk)으로 나뉩니다. (Layout 및 page)
+* server component는 RSC PayLoad(React Server Component Payload)라는 특수한 데이터
+형식으로 렌더링 됩니다.
+* client component 와 RSC PayLoad는 HTML을 미리 렌더링(prerender)하는데 사용됩니다.
+### React Server Component PayLoad(RSC)란 무엇인가요?
+* RSC 페이로드는 렌더링된 React server component 트리의 압축된 바이너리 표현입니다.
+* client에서 React가 브라우저의 DOM을 업데이트하는데 사용됩니다.  
+
+# 2. Next.js에서
+Next.js에서 server와 client component는 어떻게 작동합니까?
+* RSC 페이로드에는 다음 내용이 포함됩니다.
+#### ✓ server component의 렌더링 결과
+#### ✓ client component가 렌더링될 위치 및 해당 JavaScript 파일 참조를 위한 자리 표시자 (Placeholder)
+#### ✓ server component에서 client component로 전달되는 모든 props
+
+### # RSC(RSC PayLoad)는 JSON인가, 바이너리인가?
+#### 과거 : JSON 기반
+* RSC 초기에는 JSON 형식의 문자열로 데이터를 전달했습니다.
+* Ol: { type: "component", props: { title: "Hello" } }
+#### 현재: 바이너리 형식으로 최적화
+* 최신 React, 특히 Next.js App Router는 RSC payload를 compact binary format으로 전 송합니다.
+* JSON이 아니라, React 전용 이진 포맷으로 스트림(stream)을 통해 전달됩니다.
+* 이 방식은 JSoN보다 용량이 작고, 빠르게 파싱할 수 있습니다.  
+
+## 2. Next.js에서 server와 client component는 어떻게 작동합니까?
+### 2-2. client component의 작동(첫 번째 load)
+1. HTML은 사용자에게 경로의 비대화형 미리보기를 즉시 보여주는데 사용됩니다.
+2. RSC 페이로드는 Client와 server component 트리를 조정하는데 사용됩니다.
+3. JavaScript는 client component를 hydration하고, 애플리케이션을 대화형으로 만드는 데 사용됩니다.
+#### Hydration이란 무엇인가?
+* Hydration은 이벤트 핸들러를 DOM에 연결하여 정적 HTML을 인터랙티브하게 만드는 React의 프로세스입니다.  
+
+### 2-3. 후속 네비게이션 
+#### 후속 탐색을 할 때 :
+* RSC 페이로드는 즉시 탐색할 수 있도록 prefetch 및 cache됩니다.
+* client component는 server에서 렌더링된 HTML 없이 전적으로 cLient에서 렌더링됩니다.
+
+## 3. Example
+### 3-1. client component 사용
+* 파일의 맨 위, 즉 import문 위에 "use client" 지시문을 추가하여 cLient component를 생성할 수 있습니다.
+* “use client"는 Server와 cLient 모듈 트리 사이의 경계를 선언하는 데 사용됩니다.
+* 파일에 “use client"로 표시되면 해당 파일의 모든 import와 자식 component는 client번들의 일부로 간주됩니다.
+* 즉, client를 대상으로 하는 모든 component에 이 지시문을 추가할 필요가 없습니다.  
+
+### 3-1. client component 사용 #실습
+#### 문서의 코드는 /app/ui/counter.tsx를 작성했지만, src 디렉토리를 사용하는 경우는 다음과 같이 관리하는 것이 일반적 입니다.
+* src/app/ 아래에는 라우팅 페이지만 작성하고 관리합니다.
+* 기타 사용자 정의 component나 Library는 src/ 아래에 작성하고 관리합니다.
+#### [실습1] 따라서 이번 실습 코드는 src/components 디렉토리를 만들고 Counter 컴포넌트를 작성합니다.
+
+#### Counter 컴포넌트를 작성하는 이유는 사용할 목적이 있기 때문입니다.
+다음은 대표적인 컴포넌트의 사용 목적입니다.
+  - 다른 컴포넌트의 완성을 위해 사용합니다.
+  - 라우팅 페이지에서 렌더링을 위해 사용합니다.
+#### [실습2] 라우팅 페이지를 만들고, Counter 컴포넌트를 호출할 수 있도록 작성 합니다.
+  * 어렵게 생각하지 말고 직접 작성해 보세요!!!
+#### [실습3] 테스트의 편의를 위해 앞서 실습한 slug page(Like-button)및 counter page의 링크를 모든 라우팅 페이지에서 확인할 수 있도록 코드를 작성합니다.
+  * 어디에 어떻게 작성하면 되는지 작성하기 전에 생각을 먼저 해보세요!
+
+### 3-2. JS bundle 크기 줄이기
+* client JavaScript 번들의 크기를 줄이려면 UI의 큰 부분을 cLient component로 표시하 는 대신 특정 대화형 component에 "use client”를 추가합니다.
+* 예를 들어, 다음 예제의 <Layout> component는 로고와 탐색 링크와 같은 정적 요소가 대부분이지만 대화형 검색창이 포함되어 있습니다.
+* <Search/>는 대화형이기 때문에 client component가 되야 하지만, 나머지 Layout은 server component로 유지될 수 있습니다.
+### # 나머지 Layout은 server component로 유지해야 합니다!
+
+#### #<Search />는 사용자와의 상호작용이 바로 이루어질 가능성이 있기 때문에 CLient Component로 사용하고, <Logo/>는 상대적으로 중요하지 않고 이미지 등 용량이 크기 때문에 Server Component로 사용하는 것이 좋습니다.
+
+### 3-3. server에서 cLient component로 데이터 전달
+* props를 사용하여 server component에서 cLient component로 데이터를 전달할 수 있습 니다.
+*  앞에서 작성한 PostPage(/[id]/page. tsx) server component는 Line28에서 Client component 인 LikeButton으로 Likes props를 전달하고 있는 것을 확인할 수 있습니다.
+
+### 3-3. server에서 cLient component로 데이터 전달
+* 다른 방법으로는 use Hook을 사용하여 server component에서 cLient component로 데이 터를 스트리밍할 수도 있습니다. 예제를 참조하세요. # Fetching Data에서 소개합니다.
+* 알아두면 좋은 정보 : client component에 전달되는 Props는 React로  해야 합니다.
+
+#### 직렬화(serialization)란 무엇인가?
+#### # 일반적으로는 메모리에 있는 복잡한 데이터를 바이트의 연속 형태로 변환하는 과정을말합니다.
+#### # 즉, 자바스크립트의 객체나 배열처럼 구조가 있는 데이터를 파일로 저장하거나, 네트워크로 전송하기 쉽게 만드는 과정입니다.
+#### # React나 Next.js 같은 프레임워크는 컴포넌트의 상태나 트리 구조를 서버에서 직렬화 하여 클라이언트로 전송하고, 클라이언트에서 역직렬화 하는 과정을 자주 수행합니다.
+
+
+
+
+
+
+
+
+
+
 # 10월1일 강의내용 
 ### 1교시  
 ## 5장  
