@@ -1,4 +1,174 @@
 # 202130230 지영준
+## 🗓️ 10월 29일 강의내용
+### 💡 주제: Next.js 16 & Server/Client Component 심화
+
+---
+
+## 🌟 Introduction
+
+기본적으로 **Layout**과 **Page**는 `server component`입니다.  
+`server`에서 데이터를 가져와 **UI의 일부를 렌더링**할 수 있고, 선택적으로 **결과를 cache**한 뒤 `client`로 스트리밍할 수 있습니다.  
+
+> 👉 브라우저 전용 API가 필요할 경우 `Client Component`를 사용하여 기능을 확장할 수 있습니다.
+
+이번 강의에서는  
+- Next.js에서 **Server** 및 **Client Component**의 작동 방식을 이해하고,  
+- 애플리케이션 내에서 이들을 조합하여 사용하는 방법을 학습합니다.  
+
+---
+
+## 🧩 1. Server 및 Client Component를 언제 사용해야 하나요?
+
+### ✅ Client Component를 사용하는 경우
+- **state** 관리 및 **event handler**가 필요한 경우  
+  → 예: `onClick`, `onChange`
+- **Lifecycle Logic** 사용 시  
+  → 예: `useEffect`
+- **브라우저 전용 API** (예: `localStorage`, `window`, `Navigator`)가 필요한 경우  
+- **사용자 인터랙션(UI 업데이트)** 이 즉시 반영되어야 하는 경우  
+
+```tsx
+"use client";
+
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      클릭 횟수: {count}
+    </button>
+  );
+}
+```
+## ✅ Server Component를 사용하는 경우
+* 데이터베이스, API 호출 등 비공개 서버 자원 접근이 필요한 경우
+* 빌드 타임 또는 요청 시점에 서버 데이터 Fetch가 필요한 경우
+* API Key, Token 등 민감한 정보를 서버에서 처리할 때
+```tsx
+// app/page.tsx
+import { getUser } from "@/lib/user";
+
+export default async function Page() {
+  const user = await getUser();
+  return <h1>안녕하세요, {user.name}님 👋</h1>;
+}
+```
+## 🧱 2. Server와 Client 컴포넌트의 결합
+
+* Next.js에서는 Server와 Client 컴포넌트를 혼합 구성할 수 있습니다.  
+단, Server → Client 방향의 import만 가능하며, 반대 방향은 허용되지 않습니다.
+
+```tsx
+// app/dashboard/page.tsx
+import DashboardClient from "./DashboardClient";
+
+export default async function DashboardPage() {
+  const stats = await getStats();
+  return <DashboardClient stats={stats} />;
+}
+```
+```tsx
+// app/dashboard/DashboardClient.tsx
+"use client";
+
+export default function DashboardClient({ stats }) {
+  return (
+    <div>
+      <h2>📊 대시보드 통계</h2>
+      <p>오늘 방문자 수: {stats.visits}</p>
+    </div>
+  );
+}
+```
+## 3. Next.js 16의 주요 기능 정리
+
+Next.js 16은 프레임워크의 완성도와 개발 효율성을 극대화한 버전으로,  
+서버 액션, App Router 안정화, 캐싱 최적화, 스트리밍 렌더링 등 다양한 기능이 추가되었습니다.
+
+### 1) App Router의 완전한 안정화
+Next.js 16에서는 App Router가 완전히 안정화되어 `/app` 디렉토리 중심의 구조가 표준으로 자리잡았습니다.  
+페이지, 레이아웃, 로딩, 에러 처리를 각각의 파일로 분리해 관리할 수 있으며,  
+서버 컴포넌트와 클라이언트 컴포넌트를 혼합해 사용하는 것이 가능해졌습니다.  
+이로써 페이지 렌더링 속도와 유지보수성이 모두 향상되었습니다.
+
+예시 디렉토리 구조:
+```
+/app
+├─ layout.tsx      # 공통 레이아웃
+├─ page.tsx        # 페이지 내용
+├─ loading.tsx     # 로딩 화면
+└─ error.tsx       # 에러 처리
+```
+### 2) 서버 액션(Server Actions)
+서버 액션은 클라이언트에서 별도의 API 엔드포인트 없이  
+서버 로직을 직접 호출할 수 있게 하는 기능입니다.  
+예를 들어, 사용자가 폼을 제출할 때 서버 측 데이터베이스에 바로 접근할 수 있으며,  
+이 과정에서 보안성과 성능이 모두 개선됩니다.
+
+```tsx
+"use server";
+
+export async function addTodo(formData: FormData) {
+  const todo = formData.get("todo") as string;
+  console.log(`할 일 추가됨: ${todo}`);
+}
+```
+### 3) React 19 완전 지원
+
+Next.js 16은 **React 19 버전**을 완전히 지원합니다.  
+새로운 훅(`use`, `useOptimistic` 등), 개선된 이벤트 시스템,  
+그리고 **자동 Suspense 관리 기능**을 통해 데이터 로딩과 렌더링 과정이 한층 단순화되었습니다.  
+
+이로 인해 개발자는 비동기 데이터 처리나 상태 전환 시 불필요한 코드 작성을 줄일 수 있으며,  
+클라이언트 컴포넌트와 서버 컴포넌트 간의 상호 작용도 보다 직관적으로 관리할 수 있습니다.
+
+---
+
+### 4) 스트리밍 렌더링 (Streaming Rendering)
+
+Next.js 16에서는 **스트리밍 렌더링** 기능이 강화되어,  
+서버가 페이지 전체를 한 번에 렌더링하지 않고 **조각 단위로 클라이언트에 전송**합니다.  
+이를 통해 초기 화면 로딩 속도가 크게 향상되며, 사용자는 더 빠른 시각적 피드백을 받을 수 있습니다.  
+
+이 방식은 **SEO에도 유리**하며, 서버 자원 사용량을 줄이고  
+대규모 데이터 페이지에서도 부드러운 사용자 경험을 제공합니다.
+
+---
+
+### 5) 캐싱 시스템 최적화
+
+Next.js 16에서는 `fetch()` 함수에 **내장된 캐시 기능이 대폭 강화**되었습니다.  
+데이터는 기본적으로 자동 캐싱되며, 필요할 경우 `revalidateTag()`를 사용해  
+특정 데이터만 **선택적으로 갱신**할 수 있습니다.  
+
+이 기능은 API 호출 횟수를 줄이고 서버 리소스를 효율적으로 관리하는 데 도움을 줍니다.  
+또한 캐시 정책을 코드 수준에서 세밀하게 제어할 수 있어  
+정적·동적 데이터를 혼합한 페이지 구현에도 적합합니다.
+
+---
+
+### 6) Edge Runtime 및 Middleware 강화
+
+Next.js 16은 **Edge Runtime 환경을 공식 지원**하여  
+전 세계 CDN 엣지 노드에서 빠르게 요청을 처리할 수 있습니다.  
+그 결과, 페이지 응답 지연(Latency)이 현저히 감소하며 글로벌 사용자에게 더 나은 속도를 제공합니다.  
+
+또한 `middleware.ts` 파일을 통해 요청이 서버에 도달하기 전에  
+**인증, 리다이렉트, 권한 검증, 로깅** 등의 작업을 수행할 수 있습니다.  
+이로써 서버 사이드 로직의 분리와 보안 강화를 손쉽게 구현할 수 있습니다.
+
+---  
+
+# 10월 22일 강의내용
+## 1교시
+
+
+
+
+
+
 # 10월 17일 강의내용  
 ### 1교시  
 ## 5장
